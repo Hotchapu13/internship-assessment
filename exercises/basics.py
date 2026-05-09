@@ -12,7 +12,7 @@ def collatz(n: int) -> List[int]:
     For example, if n = 3, the sequence of values is: 3 -> 10 -> 5 -> 16 -> 8 -> 4 -> 2 -> 1
     So, your function would return: [3, 10, 5, 16, 8, 4, 2, 1]
     """
-    values: List[int] = []
+    values: List[int] = [n]
 
     while n != 1:
         if n % 2 == 0:
