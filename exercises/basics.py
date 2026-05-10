@@ -31,4 +31,9 @@ def distinct_numbers(numbers: List[int]) -> int:
 
     E.g if numbers = [2, 3, 2, 2, 3], then the answer is 2 since there are only 2 unique numbers: 2 and 3.
     """
-    pass
+    num_set = set()
+
+    for _ in numbers:
+        num_set.add(_)
+    
+    return len(num_set)
