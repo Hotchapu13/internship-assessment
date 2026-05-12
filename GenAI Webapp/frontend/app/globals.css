@@ -91,9 +91,11 @@ button {
 }
 
 .composer {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
+  overflow: hidden;
   width: 100%;
   min-height: 5rem;
   border: 1px solid rgba(112, 128, 120, 0.32);
@@ -107,11 +109,30 @@ button {
     background 160ms ease;
 }
 
-.composer:focus-within,
-.composer.is-dragging {
+.composer:focus-within {
   border-color: rgba(22, 115, 93, 0.7);
   box-shadow: 0 26px 78px rgba(22, 115, 93, 0.17);
   background: #ffffff;
+}
+
+.composer.is-dragging > :not(.drop-mask) {
+  filter: blur(4px);
+  opacity: 0.32;
+}
+
+.drop-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: rgba(238, 244, 241, 0.72);
+  color: var(--accent-dark);
+  font-weight: 800;
+  letter-spacing: 0;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
 }
 
 .composer textarea {
@@ -139,6 +160,13 @@ button {
   overflow: hidden;
   color: var(--muted);
   cursor: pointer;
+}
+
+.dropzone,
+.send-button {
+  transition:
+    filter 160ms ease,
+    opacity 160ms ease;
 }
 
 .dropzone input {
@@ -172,6 +200,26 @@ button {
 .send-button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.upload-progress {
+  --progress: 0%;
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #ffffff 54%, transparent 56%),
+    conic-gradient(var(--accent) var(--progress), var(--line) 0);
+  color: var(--accent-dark);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.upload-progress::after {
+  content: "%";
 }
 
 .mode-switcher {

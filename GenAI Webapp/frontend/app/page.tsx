@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, DragEvent, FormEvent, useRef, useState } from "react";
+import { CSSProperties, ChangeEvent, DragEvent, FormEvent, useRef, useState } from "react";
 import { FileAudio, Pause, Play, Send } from "lucide-react";
 import { targetLanguages } from "@/lib/languages";
 
@@ -20,6 +20,7 @@ export default function Home() {
   const [targetLanguage, setTargetLanguage] = useState(targetLanguages[0].value);
   const [text, setText] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,8 @@ export default function Home() {
 
   async function acceptAudioFile(file: File) {
     setError(null);
+    setAudioFile(null);
+    setUploadProgress(null);
 
     if (!file.type.startsWith("audio/")) {
       setError("Please upload an audio file.");
@@ -58,17 +61,21 @@ export default function Home() {
     }
 
     try {
+      setInputMode("audio");
+      setUploadProgress(12);
       const duration = await getAudioDuration(file);
       if (duration > MAX_AUDIO_SECONDS) {
         setAudioFile(null);
+        setUploadProgress(null);
         setError("Audio files must be 5 minutes or shorter.");
         return;
       }
 
-      setInputMode("audio");
       setAudioFile(file);
+      setUploadProgress(100);
     } catch (durationError) {
       setAudioFile(null);
+      setUploadProgress(null);
       setError(
         durationError instanceof Error
           ? durationError.message
@@ -202,6 +209,12 @@ export default function Home() {
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
             >
+              {isDragging ? (
+                <div className="drop-mask" aria-hidden="true">
+                  Drop here to upload
+                </div>
+              ) : null}
+
               {inputMode === "text" ? (
                 <textarea
                   aria-label="Text to summarise and translate"
@@ -218,6 +231,15 @@ export default function Home() {
                       ? audioFile.name
                       : "Drop audio here or click to upload. Maximum length is 5 minutes."}
                   </span>
+                  {uploadProgress !== null ? (
+                    <span
+                      className="upload-progress"
+                      aria-label={`Upload progress ${uploadProgress}%`}
+                      style={{ "--progress": `${uploadProgress}%` } as CSSProperties}
+                    >
+                      {uploadProgress}
+                    </span>
+                  ) : null}
                   <input accept="audio/*" type="file" onChange={handleFileChange} />
                 </label>
               )}
