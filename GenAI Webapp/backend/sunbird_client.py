@@ -13,6 +13,7 @@ SPEAKER_IDS = {
     "nyn": 243,
     "lgg": 245,
     "lug": 248,
+    # "swh": 246,
 }
 
 
@@ -111,7 +112,7 @@ class SunbirdClient:
 
     async def _post_json(self, path: str, payload: dict) -> dict:
         try:
-            async with httpx.AsyncClient(timeout=120) as client:
+            async with httpx.AsyncClient(timeout=300) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers={**self.headers, "Content-Type": "application/json"},
