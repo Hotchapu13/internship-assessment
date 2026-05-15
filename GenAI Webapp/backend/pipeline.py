@@ -38,8 +38,8 @@ async def process_text(text: str, target_language: str, settings: Settings) -> P
 
     return ProcessResult(
         summary=summary,
-        translated_summary=translated_summary,
-        audio_url=public_audio_url(settings, audio_path.name),
+        translatedSummary=translated_summary,
+        audioUrl=public_audio_url(settings, audio_path.name),
     )
 
 
@@ -72,6 +72,6 @@ async def process_audio(
     return ProcessResult(
         transcript=transcript,
         summary=summary,
-        translated_summary=translated_summary,
-        audio_url=public_audio_url(settings, audio_path.name),
+        translatedSummary=translated_summary,
+        audioUrl=public_audio_url(settings, audio_path.name),
     )
