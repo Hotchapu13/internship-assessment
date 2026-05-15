@@ -127,7 +127,7 @@ class SunbirdClient:
 
     async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
         try:
-            async with httpx.AsyncClient(timeout=180) as client:
+            async with httpx.AsyncClient(timeout=300) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers=self.headers,
