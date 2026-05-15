@@ -8,7 +8,7 @@ from errors import SunbirdAPIError, SunbirdTimeoutError
 
 
 SPEAKER_IDS = {
-    "ach": 241,
+    "acholi": 241,
     "teo": 242,
     "nyn": 243,
     "lgg": 245,
@@ -43,7 +43,7 @@ class SunbirdClient:
                 content_type or "application/octet-stream",
             )
         }
-        payload = await self._post_multipart("/tasks/stt", data=data, files=files)
+        payload = await self._post_multipart("/tasks/modal/stt", data=data, files=files)
         transcript = payload.get("audio_transcription") or payload.get("formatted_diarization_output")
         if not transcript:
             raise SunbirdAPIError("Speech-to-text failed.", "Sunbird returned no transcript.")
@@ -52,6 +52,7 @@ class SunbirdClient:
     async def summarise(self, text: str) -> str:
         payload = await self._post_json("/tasks/summarise", {"text": text})
         summary = payload.get("summarized_text")
+        print(f"Summary: {summary}")
         if not summary:
             raise SunbirdAPIError("Summarisation failed.", "Sunbird returned no summary.")
         return summary
@@ -64,6 +65,7 @@ class SunbirdClient:
 
         language = payload.get("language")
         if isinstance(language, str) and language != "language not detected":
+            print(f"Language detected: {language}")
             return language
         return None
 
@@ -71,15 +73,15 @@ class SunbirdClient:
         if source_language == target_language:
             return text
 
+        print("[Starting json request]")
         payload = await self._post_json(
-            "/tasks/nllb_translate",
-            {
-                "source_language": source_language,
-                "target_language": target_language,
-                "text": text,
-            },
+            "/tasks/sunflower_simple",
+            { "instruction": f"Translate the following text from {source_language} to {target_language}: {text}"
+            }
         )
-        output = payload.get("output") or {}
+        print("[Acquired json]")
+
+        output = payload.get("response") or {}
         if output.get("Error"):
             raise SunbirdAPIError("Translation failed.", str(output["Error"]))
 
@@ -98,8 +100,6 @@ class SunbirdClient:
             {
                 "text": text,
                 "speaker_id": speaker_id,
-                "temperature": self.settings.tts_temperature,
-                "max_new_audio_tokens": self.settings.tts_max_new_audio_tokens,
             },
         )
         output = payload.get("output") or {}
@@ -112,11 +112,13 @@ class SunbirdClient:
 
     async def _post_json(self, path: str, payload: dict) -> dict:
         try:
+            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=300) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers={**self.headers, "Content-Type": "application/json"},
                     json=payload,
+                    follow_redirects=True
                 )
         except httpx.TimeoutException as exc:
             raise SunbirdTimeoutError(detail=str(exc)) from exc
@@ -127,12 +129,14 @@ class SunbirdClient:
 
     async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
         try:
+            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=300) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers=self.headers,
                     data=data,
                     files=files,
+                    follow_redirects=True
                 )
         except httpx.TimeoutException as exc:
             raise SunbirdTimeoutError("Speech-to-text timed out.", str(exc)) from exc
