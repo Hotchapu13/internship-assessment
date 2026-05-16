@@ -182,21 +182,21 @@ Frontend variables live in `GenAI_Webapp/frontend/.env.local`:
 
 2. Choose the target language from the dropdown.
 
-   ![Language dropdown selection](images/language_select.png)
+   ![Language dropdown selection](images/luga_dropdown.png)
 
-3. Click the circular send button to submit the audio file.
+3. Click the circular send button to submit the audio file and wait while the app transcribes the audio, summarises the transcript, translates the summary, and generates the audio output.
 
-   ![Audio file ready to submit](images/Screenshot%20from%202026-05-16%2009-00-10.png)
+   ![Audio file ready to submit](images/lug_processing.png)
 
-4. Wait while the app transcribes the audio, summarises the transcript, translates the summary, and generates the audio output.
-
-   ![Audio processing result preview](images/audio_result1.png)
 
 5. Review the transcript, summary, translated summary, and generated audio player.
+   ![Audio processing result preview](images/audio_result1.png)
+
 
    ![Audio input final results](images/audio_result2.png)
 
 Audio files longer than 5 minutes are rejected with a clear error message.
+        ![Long audio files rejection](images/pastmaxmin.png)
 
 ## Known Limitations
 
