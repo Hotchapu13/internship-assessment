@@ -73,12 +73,12 @@ class SunbirdClient:
         if source_language == target_language:
             return text
 
-        print("[Starting json request]")
-        payload = await self._post_json(
+        print("[Starting form request]")
+        payload = await self._post_form(
             "/tasks/sunflower_simple",
-            { "instruction": f"Translate '{text}' from {source_language} to {target_language}"}
+            {"instruction": f"Translate the following text from {source_language} to {target_language}: {text}"}
         )
-        print("[Acquired json]")
+        print("[Acquired response]")
 
         output = payload.get("response") or {}
         if output.get("Error"):
@@ -110,37 +110,48 @@ class SunbirdClient:
         return await self._download_audio(audio_url, audio_format, output_dir)
 
     async def _post_json(self, path: str, payload: dict) -> dict:
+        return await self._post(path, json=payload)
+
+    async def _post_form(self, path: str, data: dict) -> dict:
+        return await self._post(path, data=data)
+
+    async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
+        return await self._post(path, data=data, files=files)
+
+    async def _post(
+        self,
+        path: str,
+        json: dict | None = None,
+        data: dict | None = None,
+        files: dict | None = None,
+    ) -> dict:
         try:
             print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
-            async with httpx.AsyncClient(timeout=600) as client:
+            async with httpx.AsyncClient(timeout=300) as client:
+                kwargs = {"follow_redirects": True}
+                
+                # Set appropriate headers and request parameters
+                if json is not None:
+                    kwargs["headers"] = {**self.headers, "Content-Type": "application/json"}
+                    kwargs["json"] = json
+                elif files is not None:
+                    # For multipart, let httpx set the Content-Type automatically
+                    kwargs["headers"] = self.headers
+                    kwargs["data"] = data
+                    kwargs["files"] = files
+                else:
+                    # For form-urlencoded
+                    kwargs["headers"] = {**self.headers, "Content-Type": "application/x-www-form-urlencoded"}
+                    kwargs["data"] = data
+
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
-                    headers={**self.headers, "Content-Type": "application/json"},
-                    json=payload,
-                    follow_redirects=False
+                    **kwargs
                 )
         except httpx.TimeoutException as exc:
             raise SunbirdTimeoutError(detail=str(exc)) from exc
         except httpx.HTTPError as exc:
             raise SunbirdAPIError(detail=str(exc)) from exc
-
-        return self._parse_response(response)
-
-    async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
-        try:
-            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
-            async with httpx.AsyncClient(timeout=600) as client:
-                response = await client.post(
-                    f"{self.settings.sunbird_base_url}{path}",
-                    headers=self.headers,
-                    data=data,
-                    files=files,
-                    follow_redirects=True
-                )
-        except httpx.TimeoutException as exc:
-            raise SunbirdTimeoutError("Speech-to-text timed out.", str(exc)) from exc
-        except httpx.HTTPError as exc:
-            raise SunbirdAPIError("Speech-to-text failed.", str(exc)) from exc
 
         return self._parse_response(response)
 
@@ -150,7 +161,7 @@ class SunbirdClient:
         output_path = output_dir / f"{uuid4().hex}{suffix}"
 
         try:
-            async with httpx.AsyncClient(timeout=600, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
                 response = await client.get(audio_url)
                 response.raise_for_status()
         except httpx.TimeoutException as exc:
