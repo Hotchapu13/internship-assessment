@@ -128,6 +128,7 @@ class SunbirdClient:
 
     async def _post_json(self, path: str, payload: dict) -> dict:
         try:
+            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
@@ -144,6 +145,7 @@ class SunbirdClient:
 
     async def _post_form(self, path: str, data: dict) -> dict:
         try:
+            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
@@ -160,6 +162,7 @@ class SunbirdClient:
 
     async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
         try:
+            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
