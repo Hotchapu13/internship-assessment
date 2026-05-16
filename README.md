@@ -115,10 +115,10 @@ npm install
 Create the frontend environment file:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Make sure `.env.local` points to the local FastAPI backend:
+Make sure `.env` points to the local FastAPI backend:
 
 ```env
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
