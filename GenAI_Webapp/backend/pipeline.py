@@ -101,7 +101,7 @@ async def process_audio(
         errors.append(stage_error("summary", exc, "Summarisation failed."))
         return ProcessResult(transcript=transcript, stageErrors=errors)
 
-    source_language = await client.detect_language(summary) or stt_language
+    source_language = await client.detect_language(summary) or "eng"
 
     try:
         translated_summary = await client.translate(summary, source_language, target_language)

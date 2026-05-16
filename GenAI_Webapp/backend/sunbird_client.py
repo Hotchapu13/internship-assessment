@@ -8,12 +8,22 @@ from errors import SunbirdAPIError, SunbirdTimeoutError
 
 
 SPEAKER_IDS = {
-    "acholi": 241,
+    "ach": 241,
     "teo": 242,
     "nyn": 243,
     "lgg": 245,
     "lug": 248,
     "swa": 246,
+}
+
+LANGUAGE_NAMES = {
+    "ach": "Acholi",
+    "eng": "English",
+    "lgg": "Lugbara",
+    "lug": "Luganda",
+    "nyn": "Runyankole",
+    "swa": "Swahili",
+    "teo": "Ateso",
 }
 
 
@@ -71,12 +81,15 @@ class SunbirdClient:
         if source_language == target_language:
             return text
 
+        source_name = LANGUAGE_NAMES.get(source_language, source_language)
+        target_name = LANGUAGE_NAMES.get(target_language, target_language)
+
         payload = await self._post_form(
             "/tasks/sunflower_simple",
             {
                 "instruction": (
-                    f"Translate the following text from {source_language} to "
-                    f"{target_language}. Return only the translated text.\n\n{text}"
+                    f"Translate the following text from {source_name} to "
+                    f"{target_name}. Return only the translated text, with no explanation.\n\n{text}"
                 )
             },
         )

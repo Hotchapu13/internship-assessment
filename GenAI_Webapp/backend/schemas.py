@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-SUPPORTED_LANGUAGES = {"ach", "teo", "eng", "lug", "lgg", "nyn"}
+SUPPORTED_LANGUAGES = {"ach", "teo", "eng", "lug", "lgg", "nyn", "swa"}
 
 
 class StageError(BaseModel):
