@@ -130,7 +130,7 @@ export default function Home() {
 
     try {
       setIsProcessing(true);
-      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+      const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
       const response = await fetch(`${baseUrl}/api/process`, {
         method: "POST",
         body: formData
