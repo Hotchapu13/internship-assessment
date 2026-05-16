@@ -76,8 +76,7 @@ class SunbirdClient:
         print("[Starting json request]")
         payload = await self._post_json(
             "/tasks/sunflower_simple",
-            { "instruction": f"Translate the following text from {source_language} to {target_language}: {text}"
-            }
+            { "instruction": f"Translate '{text}' from {source_language} to {target_language}"}
         )
         print("[Acquired json]")
 
@@ -113,12 +112,12 @@ class SunbirdClient:
     async def _post_json(self, path: str, payload: dict) -> dict:
         try:
             print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
-            async with httpx.AsyncClient(timeout=300) as client:
+            async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers={**self.headers, "Content-Type": "application/json"},
                     json=payload,
-                    follow_redirects=True
+                    follow_redirects=False
                 )
         except httpx.TimeoutException as exc:
             raise SunbirdTimeoutError(detail=str(exc)) from exc
@@ -130,7 +129,7 @@ class SunbirdClient:
     async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
         try:
             print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
-            async with httpx.AsyncClient(timeout=300) as client:
+            async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
                     headers=self.headers,
@@ -151,7 +150,7 @@ class SunbirdClient:
         output_path = output_dir / f"{uuid4().hex}{suffix}"
 
         try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=600, follow_redirects=True) as client:
                 response = await client.get(audio_url)
                 response.raise_for_status()
         except httpx.TimeoutException as exc:

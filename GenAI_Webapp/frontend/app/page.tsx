@@ -6,11 +6,18 @@ import { targetLanguages } from "@/lib/languages";
 
 type InputMode = "text" | "audio";
 
+type StageError = {
+  stage: string;
+  message: string;
+  detail?: string;
+};
+
 type ProcessResult = {
   transcript?: string;
-  summary: string;
-  translatedSummary: string;
-  audioUrl: string;
+  summary?: string;
+  translatedSummary?: string;
+  audioUrl?: string;
+  stageErrors?: StageError[];
 };
 
 const MAX_AUDIO_SECONDS = 5 * 60;
@@ -148,7 +155,8 @@ export default function Home() {
         transcript: payload.transcript,
         summary: payload.summary,
         translatedSummary: payload.translated_summary ?? payload.translatedSummary,
-        audioUrl: payload.audio_url ?? payload.audioUrl
+        audioUrl: payload.audio_url ?? payload.audioUrl,
+        stageErrors: payload.stage_errors ?? payload.stageErrors ?? []
       });
     } catch (requestError) {
       setError(
@@ -180,6 +188,26 @@ export default function Home() {
       setIsPlaying(false);
     }
   }
+
+  function getStageError(stage: string) {
+    return result?.stageErrors?.find((stageError) => stageError.stage === stage);
+  }
+
+  function renderStageMessage(stage: string) {
+    const stageError = getStageError(stage);
+    if (!stageError) {
+      return null;
+    }
+
+    return (
+      <p className="stage-error">
+        {stageError.message}
+        {stageError.detail ? ` ${stageError.detail}` : ""}
+      </p>
+    );
+  }
+
+  const hasStageErrors = Boolean(result?.stageErrors?.length);
 
   return (
     <main className="page-shell">
@@ -290,46 +318,66 @@ export default function Home() {
           </div>
 
           {error ? <div className="error-banner">{error}</div> : null}
+          {hasStageErrors ? (
+            <div className="error-banner">
+              Some steps could not be completed. The available results are shown below.
+            </div>
+          ) : null}
 
           <div className="result-grid">
-            {result.transcript ? (
+            {inputMode === "audio" && (result.transcript || getStageError("transcript")) ? (
               <article className="result-card">
                 <h2>Transcript</h2>
-                <p>{result.transcript}</p>
+                {result.transcript ? <p>{result.transcript}</p> : renderStageMessage("transcript")}
               </article>
             ) : null}
 
-            <article className="result-card">
-              <h2>Summary</h2>
-              <p>{result.summary}</p>
-            </article>
+            {result.summary || getStageError("summary") ? (
+              <article className="result-card">
+                <h2>Summary</h2>
+                {result.summary ? <p>{result.summary}</p> : renderStageMessage("summary")}
+              </article>
+            ) : null}
 
-            <article className="result-card">
-              <h2>Translated Summary</h2>
-              <p>{result.translatedSummary}</p>
-            </article>
+            {result.translatedSummary || getStageError("translation") ? (
+              <article className="result-card">
+                <h2>Translated Summary</h2>
+                {result.translatedSummary ? (
+                  <p>{result.translatedSummary}</p>
+                ) : (
+                  renderStageMessage("translation")
+                )}
+              </article>
+            ) : null}
 
-            <article className="result-card">
-              <h2>Audio</h2>
-              <div className="audio-ui">
-                <button className="play-button" type="button" onClick={toggleAudio}>
-                  {isPlaying ? (
-                    <Pause size={20} aria-hidden="true" />
-                  ) : (
-                    <Play size={20} aria-hidden="true" />
-                  )}
-                  <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
-                </button>
-                <audio
-                  ref={audioRef}
-                  controls
-                  src={result.audioUrl}
-                  onPause={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  onEnded={() => setIsPlaying(false)}
-                />
-              </div>
-            </article>
+            {result.audioUrl || getStageError("audio") ? (
+              <article className="result-card">
+                <h2>Audio</h2>
+                {result.audioUrl ? (
+                  <div className="audio-ui">
+                    <button className="play-button" type="button" onClick={toggleAudio}>
+                      {isPlaying ? (
+                        <Pause size={20} aria-hidden="true" />
+                      ) : (
+                        <Play size={20} aria-hidden="true" />
+                      )}
+                      <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
+                    </button>
+                    <audio
+                      ref={audioRef}
+                      controls
+                      src={result.audioUrl}
+                      onPause={() => setIsPlaying(false)}
+                      onPlay={() => setIsPlaying(true)}
+                      onEnded={() => setIsPlaying(false)}
+                    />
+                  </div>
+                ) : (
+                  renderStageMessage("audio")
+                )}
+              </article>
+            ) : null}
+
           </div>
         </section>
       )}
