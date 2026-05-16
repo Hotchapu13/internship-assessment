@@ -2,7 +2,9 @@
 
 This project was built as part of an internship assessment for SunbirdAI. It is a small GenAI web application that accepts either text or an audio upload, summarises the content, translates the summary into a selected local language, and generates playable audio for the translated summary using Sunbird AI APIs.
 
-Live application: https://internship-assessment-5ds5dkat9-hotchapu13s-projects.vercel.app/
+The assessment also required deploying a live application. This project has been deployed and can be tested here:
+
+Live application: https://internship-assessment-nu.vercel.app/
 
 ## Project Structure
 
