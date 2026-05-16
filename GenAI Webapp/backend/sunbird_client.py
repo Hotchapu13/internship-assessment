@@ -76,15 +76,15 @@ class SunbirdClient:
         print("[Starting form request]")
         payload = await self._post_form(
             "/tasks/sunflower_simple",
-            {"instruction": f"Translate the following text from {source_language} to {target_language}: {text}"}
+            {"instruction": f"Translate the {text} from {source_language} to {target_language}"}
         )
         print("[Acquired response]")
 
-        output = payload.get("response") or {}
-        if output.get("Error"):
-            raise SunbirdAPIError("Translation failed.", str(output["Error"]))
+        payload.raise_for_status()
+        if payload.get("Error"):
+            raise SunbirdAPIError("Translation failed.", str(payload["Error"]))
 
-        translated = output.get("translated_text")
+        translated = payload.json().get("response")
         if not translated:
             raise SunbirdAPIError("Translation failed.", "Sunbird returned no translated text.")
         return translated
