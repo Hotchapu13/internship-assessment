@@ -52,7 +52,6 @@ class SunbirdClient:
     async def summarise(self, text: str) -> str:
         payload = await self._post_json("/tasks/summarise", {"text": text})
         summary = payload.get("summarized_text")
-        print(f"Summary: {summary}")
         if not summary:
             raise SunbirdAPIError("Summarisation failed.", "Sunbird returned no summary.")
         return summary
@@ -65,7 +64,6 @@ class SunbirdClient:
 
         language = payload.get("language")
         if isinstance(language, str) and language != "language not detected":
-            print(f"Language detected: {language}")
             return language
         return None
 
@@ -73,21 +71,40 @@ class SunbirdClient:
         if source_language == target_language:
             return text
 
-        print("[Starting json request]")
-        payload = await self._post_json(
+        payload = await self._post_form(
             "/tasks/sunflower_simple",
-            { "instruction": f"Translate '{text}' from {source_language} to {target_language}"}
+            {
+                "instruction": (
+                    f"Translate the following text from {source_language} to "
+                    f"{target_language}. Return only the translated text.\n\n{text}"
+                )
+            },
         )
-        print("[Acquired json]")
 
-        output = payload.get("response") or {}
-        if output.get("Error"):
-            raise SunbirdAPIError("Translation failed.", str(output["Error"]))
-
-        translated = output.get("translated_text")
+        translated = self._extract_translation(payload)
         if not translated:
             raise SunbirdAPIError("Translation failed.", "Sunbird returned no translated text.")
         return translated
+
+    def _extract_translation(self, payload: dict) -> str | None:
+        for key in ("translated_text", "translation", "text", "output"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+        response = payload.get("response")
+        if isinstance(response, str) and response.strip():
+            return response.strip()
+
+        if isinstance(response, dict):
+            if response.get("Error"):
+                raise SunbirdAPIError("Translation failed.", str(response["Error"]))
+            for key in ("translated_text", "translation", "text", "output"):
+                value = response.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+
+        return None
 
     async def text_to_speech(self, text: str, target_language: str, output_dir: Path) -> Path:
         speaker_id = SPEAKER_IDS.get(target_language)
@@ -111,7 +128,6 @@ class SunbirdClient:
 
     async def _post_json(self, path: str, payload: dict) -> dict:
         try:
-            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
@@ -126,9 +142,24 @@ class SunbirdClient:
 
         return self._parse_response(response)
 
+    async def _post_form(self, path: str, data: dict) -> dict:
+        try:
+            async with httpx.AsyncClient(timeout=600) as client:
+                response = await client.post(
+                    f"{self.settings.sunbird_base_url}{path}",
+                    headers=self.headers,
+                    data=data,
+                    follow_redirects=True,
+                )
+        except httpx.TimeoutException as exc:
+            raise SunbirdTimeoutError(detail=str(exc)) from exc
+        except httpx.HTTPError as exc:
+            raise SunbirdAPIError(detail=str(exc)) from exc
+
+        return self._parse_response(response)
+
     async def _post_multipart(self, path: str, data: dict, files: dict) -> dict:
         try:
-            print(f"DEBUG: Attempting POST to {self.settings.sunbird_base_url}{path}")
             async with httpx.AsyncClient(timeout=600) as client:
                 response = await client.post(
                     f"{self.settings.sunbird_base_url}{path}",
