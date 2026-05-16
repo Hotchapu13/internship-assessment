@@ -13,7 +13,7 @@ SPEAKER_IDS = {
     "nyn": 243,
     "lgg": 245,
     "lug": 248,
-    # "swh": 246,
+    "swa": 246,
 }
 
 
