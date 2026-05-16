@@ -11,8 +11,7 @@ load_dotenv()
 class Settings:
     sunbird_api_key: str
     sunbird_base_url: str
-    frontend_origins: list[str]
-    frontend_origin_regex: str | None
+    frontend_origin: str
     public_backend_url: str
     default_stt_language: str
     tts_temperature: float
@@ -22,19 +21,7 @@ class Settings:
     def __init__(self) -> None:
         self.sunbird_api_key = os.getenv("SUNBIRD_API_KEY", "")
         self.sunbird_base_url = os.getenv("SUNBIRD_BASE_URL", "https://api.sunbird.ai").rstrip("/")
-        frontend_origins = os.getenv(
-            "FRONTEND_ORIGINS",
-            os.getenv("FRONTEND_ORIGIN", "http://localhost:3000"),
-        )
-        self.frontend_origins = [
-            origin.strip().rstrip("/")
-            for origin in frontend_origins.split(",")
-            if origin.strip()
-        ]
-        self.frontend_origin_regex = os.getenv(
-            "FRONTEND_ORIGIN_REGEX",
-            r"https://internship-assessment-[a-z0-9-]+-hotchapu13s-projects\.vercel\.app",
-        )
+        self.frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://internship-assessment-nu.vercel.app").rstrip("/")
         self.public_backend_url = os.getenv("PUBLIC_BACKEND_URL", "https://internship-assessment-qjw6.onrender.com").rstrip("/")
         self.default_stt_language = os.getenv("SUNBIRD_STT_LANGUAGE", "lug")
         self.tts_temperature = float(os.getenv("SUNBIRD_TTS_TEMPERATURE", "0.7"))
