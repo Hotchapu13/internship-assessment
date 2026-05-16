@@ -156,11 +156,45 @@ Frontend variables live in `GenAI_Webapp/frontend/.env.local`:
 
 ## Usage
 
-1. Choose the target language from the dropdown in the top-right corner.
-2. Select either `Text` or `Audio` below the central input.
-3. Enter text, or upload/drag an audio file into the composer.
-4. Submit with the circular send button.
+### Text Input
+
+1. Enter or paste the text you want to process into the central text box.
+
+   ![Text input composer](images/text_input.png)
+
+2. Select the target language from the dropdown, then click the circular send button.
+
+   ![Language dropdown selection](images/language_select.png)
+
+3. Wait while the app summarises the text, translates the summary, and generates the audio.
+
+   ![Text processing loading state](images/text_output_loading.png)
+
+4. Review the generated summary, translated summary, and audio player.
+
+   ![Text input results](images/text_output.png)
+
+### Audio Input
+
+1. Switch to audio input, then click the composer to select an audio file or drop the file directly into the composer.
+
+   ![Audio file upload composer](images/file_upload.png)
+
+2. Choose the target language from the dropdown.
+
+   ![Language dropdown selection](images/language_select.png)
+
+3. Click the circular send button to submit the audio file.
+
+   ![Audio file ready to submit](images/Screenshot%20from%202026-05-16%2009-00-10.png)
+
+4. Wait while the app transcribes the audio, summarises the transcript, translates the summary, and generates the audio output.
+
+   ![Audio processing result preview](images/audio_result1.png)
+
 5. Review the transcript, summary, translated summary, and generated audio player.
+
+   ![Audio input final results](images/audio_result2.png)
 
 Audio files longer than 5 minutes are rejected with a clear error message.
 
