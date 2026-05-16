@@ -2,8 +2,8 @@ from fastapi import UploadFile
 
 from audio_utils import read_and_validate_audio
 from config import Settings
-from errors import BadRequestError
-from schemas import ProcessResult, SUPPORTED_LANGUAGES
+from errors import AppError, BadRequestError
+from schemas import ProcessResult, StageError, SUPPORTED_LANGUAGES
 from sunbird_client import SunbirdClient
 
 
@@ -19,6 +19,12 @@ def public_audio_url(settings: Settings, filename: str) -> str:
     return f"{settings.public_backend_url}/audio/{filename}"
 
 
+def stage_error(stage: str, exc: Exception, fallback: str) -> StageError:
+    if isinstance(exc, AppError):
+        return StageError(stage=stage, message=exc.message, detail=exc.detail)
+    return StageError(stage=stage, message=fallback, detail=str(exc))
+
+
 async def process_text(text: str, target_language: str, settings: Settings) -> ProcessResult:
     validate_target_language(target_language)
 
@@ -27,19 +33,41 @@ async def process_text(text: str, target_language: str, settings: Settings) -> P
         raise BadRequestError("Enter text before sending.")
 
     client = SunbirdClient(settings)
-    summary = await client.summarise(cleaned_text)
+    errors: list[StageError] = []
+
+    try:
+        summary = await client.summarise(cleaned_text)
+    except Exception as exc:
+        errors.append(stage_error("summary", exc, "Summarisation failed."))
+        return ProcessResult(stageErrors=errors)
+
     source_language = await client.detect_language(summary) or "eng"
-    translated_summary = await client.translate(summary, source_language, target_language)
-    audio_path = await client.text_to_speech(
-        translated_summary,
-        target_language,
-        settings.generated_audio_dir,
-    )
+
+    try:
+        translated_summary = await client.translate(summary, source_language, target_language)
+    except Exception as exc:
+        errors.append(stage_error("translation", exc, "Translation failed."))
+        return ProcessResult(summary=summary, stageErrors=errors)
+
+    try:
+        audio_path = await client.text_to_speech(
+            translated_summary,
+            target_language,
+            settings.generated_audio_dir,
+        )
+    except Exception as exc:
+        errors.append(stage_error("audio", exc, "Audio generation failed."))
+        return ProcessResult(
+            summary=summary,
+            translatedSummary=translated_summary,
+            stageErrors=errors,
+        )
 
     return ProcessResult(
         summary=summary,
         translatedSummary=translated_summary,
         audioUrl=public_audio_url(settings, audio_path.name),
+        stageErrors=errors,
     )
 
 
@@ -54,24 +82,56 @@ async def process_audio(
     stt_language = settings.default_stt_language
 
     client = SunbirdClient(settings)
-    transcript = await client.transcribe(
-        audio_bytes,
-        filename=audio.filename or "audio-upload",
-        content_type=audio.content_type or "application/octet-stream",
-        language=stt_language,
-    )
-    summary = await client.summarise(transcript)
+    errors: list[StageError] = []
+
+    try:
+        transcript = await client.transcribe(
+            audio_bytes,
+            filename=audio.filename or "audio-upload",
+            content_type=audio.content_type or "application/octet-stream",
+            language=stt_language,
+        )
+    except Exception as exc:
+        errors.append(stage_error("transcript", exc, "Speech-to-text failed."))
+        return ProcessResult(stageErrors=errors)
+
+    try:
+        summary = await client.summarise(transcript)
+    except Exception as exc:
+        errors.append(stage_error("summary", exc, "Summarisation failed."))
+        return ProcessResult(transcript=transcript, stageErrors=errors)
+
     source_language = await client.detect_language(summary) or stt_language
-    translated_summary = await client.translate(summary, source_language, target_language)
-    audio_path = await client.text_to_speech(
-        translated_summary,
-        target_language,
-        settings.generated_audio_dir,
-    )
+
+    try:
+        translated_summary = await client.translate(summary, source_language, target_language)
+    except Exception as exc:
+        errors.append(stage_error("translation", exc, "Translation failed."))
+        return ProcessResult(
+            transcript=transcript,
+            summary=summary,
+            stageErrors=errors,
+        )
+
+    try:
+        audio_path = await client.text_to_speech(
+            translated_summary,
+            target_language,
+            settings.generated_audio_dir,
+        )
+    except Exception as exc:
+        errors.append(stage_error("audio", exc, "Audio generation failed."))
+        return ProcessResult(
+            transcript=transcript,
+            summary=summary,
+            translatedSummary=translated_summary,
+            stageErrors=errors,
+        )
 
     return ProcessResult(
         transcript=transcript,
         summary=summary,
         translatedSummary=translated_summary,
         audioUrl=public_audio_url(settings, audio_path.name),
+        stageErrors=errors,
     )

@@ -316,6 +316,10 @@ button {
   white-space: pre-wrap;
 }
 
+.result-card p.stage-error {
+  color: var(--danger);
+}
+
 .audio-ui {
   display: grid;
   grid-template-columns: auto 1fr;
