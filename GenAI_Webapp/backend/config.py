@@ -21,8 +21,8 @@ class Settings:
     def __init__(self) -> None:
         self.sunbird_api_key = os.getenv("SUNBIRD_API_KEY", "")
         self.sunbird_base_url = os.getenv("SUNBIRD_BASE_URL", "https://api.sunbird.ai").rstrip("/")
-        self.frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-        self.public_backend_url = os.getenv("PUBLIC_BACKEND_URL", "http://localhost:8000").rstrip("/")
+        self.frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://internship-assessment-5ds5dkat9-hotchapu13s-projects.vercel.app/")
+        self.public_backend_url = os.getenv("PUBLIC_BACKEND_URL", "https://internship-assessment-qjw6.onrender.com").rstrip("/")
         self.default_stt_language = os.getenv("SUNBIRD_STT_LANGUAGE", "lug")
         self.tts_temperature = float(os.getenv("SUNBIRD_TTS_TEMPERATURE", "0.7"))
         self.tts_max_new_audio_tokens = int(os.getenv("SUNBIRD_TTS_MAX_NEW_AUDIO_TOKENS", "2000"))
