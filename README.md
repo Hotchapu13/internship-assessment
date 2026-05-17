@@ -205,3 +205,4 @@ Audio files longer than 5 minutes are rejected with a clear error message.
 - Supported target languages are Luganda, Acholi, Ateso, Lugbara, and Runyankole.
 - Generated TTS audio is saved by the backend and served from `/audio`.
 - If one Sunbird operation fails, later steps cannot run, but completed earlier results are still displayed.
+- The application has a high latency under average network speeds. It could take about on and a half minutes to show full results
