@@ -50,7 +50,7 @@ The UI displays every available intermediate result: transcript for audio input,
 Clone the repository and enter the repository root:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Hotchapu13/internship-assessment.git
 cd internship-assessment
 ```
 
